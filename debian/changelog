@@ -1,0 +1,35 @@
+python-unidiff (0.5.5-2) unstable; urgency=medium
+
+  * Team upload.
+  * Use debhelper-compat instead of debian/compat.
+  * Drop Python 2 support.
+  * Enable autopkgtest-pkg-python testsuite.
+  * Bump debhelper compat level to 12.
+  * Bump standards version to 4.4.0 (no changes).
+
+ -- Ondřej Nový <onovy@debian.org>  Tue, 06 Aug 2019 15:35:58 +0200
+
+python-unidiff (0.5.5-1) unstable; urgency=medium
+
+  [ Ondřej Nový ]
+  * d/control: Set Vcs-* to salsa.debian.org
+  * d/control: Remove ancient X-Python-Version field
+  * d/control: Remove ancient X-Python3-Version field
+
+  [ Ximin Luo ]
+  * New upstream release.
+
+ -- Ximin Luo <infinity0@debian.org>  Sun, 24 Mar 2019 20:51:23 -0700
+
+python-unidiff (0.5.4-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Update to latest Standards-Version; no changes needed.
+
+ -- Ximin Luo <infinity0@debian.org>  Wed, 12 Jul 2017 16:18:51 +0200
+
+python-unidiff (0.5.2-1) unstable; urgency=medium
+
+  * Initial release. (Closes: #838488)
+
+ -- Ximin Luo <infinity0@debian.org>  Wed, 21 Sep 2016 22:51:21 +0200
