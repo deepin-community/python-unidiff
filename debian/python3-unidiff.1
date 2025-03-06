@@ -1,0 +1,36 @@
+.TH PYTHON3-UNIDIFF "1" "June 2024" "python3-unidiff 1.0" "User Commands"
+.SH NAME
+python3-unidiff \- Unified diff Python parsing/metadata extraction library
+.SH SYNOPSIS
+.B python3-unidiff
+.RI [ options ]
+.SH DESCRIPTION
+.B python3-unidiff
+is a tool for processing unified diff data. It can read diff data from a file or from standard input and optionally output the diff to stdout.
+.SH OPTIONS
+.TP
+.B \-h, \--help
+Show this help message and exit.
+.TP
+.B \--show-diff
+Output the diff to stdout.
+.TP
+.B \-f, \--file \fIDIFF_FILE\fR
+Read diff data from the specified file. If not specified, read diff data from stdin.
+.SH EXAMPLES
+.TP
+.B
+git diff | python3-unidiff
+Run the tool with diff data from \fBgit diff\fR.
+.TP
+.B
+hg diff | python3-unidiff --show-diff
+Run the tool with diff data from \fBhg diff\fR and output the diff to stdout.
+.TP
+.B
+python3-unidiff -f patch.diff
+Run the tool with diff data from the specified file \fBpatch.diff\fR.
+.SH AUTHOR
+Yogeswaran Umasankar <kd8mbd@gmail.com>
+.SH REPORTING BUGS
+Report bugs to the Debian Bug Tracking System at \fIhttps://bugs.debian.org/\fR.

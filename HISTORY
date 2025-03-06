@@ -1,6 +1,50 @@
 History
 -------
 
+0.7.5 - 2023-03-09
+------------------
+
+* Fixed issue with spaces in filename when using custom git prefix.
+* Support binary patch format.
+
+0.7.4 - 2022-06-26
+------------------
+
+* Fixed git diff parsing issues (filename with spaces, only one added/deleted file).
+
+0.7.3 - 2022-02-06
+------------------
+
+* Fixed RE_BINARY_DIFF regex to make it a raw string.
+
+0.7.2 - 2022-01-28
+------------------
+
+* Fixed issue when parsing git diff header generated with `--no-prefix`.
+
+0.7.1 - 2022-01-27
+------------------
+
+* Improved git added/deleted file detection.
+* Added `newline` optional param when parsing `from_filename`.
+
+0.7.0 - 2021-08-16
+------------------
+
+* Fixed issues handling multiple git renames.
+* Renamed files return target filename as PatchedFile.path.
+* Fixed error when first change is a binary file.
+* Added source code type hints.
+
+0.6.0 - 2020-05-07
+----------------
+
+* Updated PatchSet constructor to accept an optional (default to False)
+metadata_only parameter to only keep diff metadata information without
+the diff text data (better performance).
+* Identify and track changed binary files.
+* Added support for git rename syntax.
+
 0.5.5 - 2018-01-03
 ------------------
 

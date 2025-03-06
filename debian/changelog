@@ -1,3 +1,41 @@
+python-unidiff (0.7.5-2) unstable; urgency=medium
+
+  * Team upload.
+  * Added manpages for python3-unidiff. (Closes: #1072852)
+
+ -- Yogeswaran Umasankar <yogu@debian.org>  Sun, 30 Jun 2024 10:30:00 +0000
+
+python-unidiff (0.7.5-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Use pybuild-plugin-pyproject.
+
+ -- Colin Watson <cjwatson@debian.org>  Mon, 27 May 2024 23:25:26 +0100
+
+python-unidiff (0.7.3-1) unstable; urgency=medium
+
+  * Team upload
+  [ Ondřej Nový ]
+  * d/control: Update Maintainer field with new Debian Python Team
+    contact address.
+  * d/control: Update Vcs-* fields with new Debian Python Team Salsa
+    layout.
+
+  [ Debian Janitor ]
+  * Set upstream metadata fields: Bug-Database, Bug-Submit, Repository,
+    Repository-Browse.
+  * Bump debhelper from old 12 to 13.
+
+  [ Robin Jarry ]
+  * d/control: update Standards-Version to 4.6.0.1
+
+  [ Nilesh Patra ]
+  * Add autopkgtests
+  * d/control: S-V to 4.6.0
+  * Add d/salsa-ci.yml
+
+ -- Robin Jarry <robin@jarry.cc>  Thu, 10 Mar 2022 20:34:47 +0530
+
 python-unidiff (0.5.5-2) unstable; urgency=medium
 
   * Team upload.
