@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 # The MIT License (MIT)
-# Copyright (c) 2014-2017 Matias Bordese
+# Copyright (c) 2014-2021 Matias Bordese
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -114,10 +114,10 @@ class TestUnidiffParser(unittest.TestCase):
         self.assertEqual(lines[12], '@@ -5,16 +11,10 @@')
         self.assertEqual(lines[31], '@@ -22,3 +22,7 @@')
 
-    def test_parse_sample(self):
+    def _test_parse_sample(self, metadata_only):
         """Parse sample file."""
         with codecs.open(self.sample_file, 'r', encoding='utf-8') as diff_file:
-            res = PatchSet(diff_file)
+            res = PatchSet(diff_file, metadata_only=metadata_only)
 
         # three file in the patch
         self.assertEqual(len(res), 3)
@@ -128,6 +128,7 @@ class TestUnidiffParser(unittest.TestCase):
         self.assertTrue(res[0].is_modified_file)
         self.assertFalse(res[0].is_removed_file)
         self.assertFalse(res[0].is_added_file)
+        self.assertFalse(res[0].is_binary_file)
 
         # Hunk 1: five additions, no deletions, a section header
         self.assertEqual(res[0][0].added, 6)
@@ -152,14 +153,22 @@ class TestUnidiffParser(unittest.TestCase):
         self.assertFalse(res[1].is_modified_file)
         self.assertFalse(res[1].is_removed_file)
         self.assertTrue(res[1].is_added_file)
+        self.assertFalse(res[1].is_binary_file)
 
         # third file is removed
         self.assertFalse(res[2].is_modified_file)
         self.assertTrue(res[2].is_removed_file)
         self.assertFalse(res[2].is_added_file)
+        self.assertFalse(res[2].is_binary_file)
 
         self.assertEqual(res.added, 21)
         self.assertEqual(res.removed, 17)
+
+    def test_parse_sample_full(self):
+        self._test_parse_sample(metadata_only=False)
+
+    def test_parse_sample_metadata_only(self):
+        self._test_parse_sample(metadata_only=True)
 
     def test_patchset_compare(self):
         with codecs.open(self.sample_file, 'r', encoding='utf-8') as diff_file:
@@ -222,6 +231,122 @@ class TestUnidiffParser(unittest.TestCase):
         with open(utf8_file, 'r') as diff_file:
             self.assertRaises(UnidiffParseError, PatchSet, diff_file)
 
+    def test_from_filename_with_cr_in_diff_text_files(self):
+        """Parse git diff text files that contain CR"""
+        utf8_file = os.path.join(self.samples_dir, 'samples/git_cr.diff')
+        self.assertRaises(UnidiffParseError, PatchSet.from_filename, utf8_file)
+
+        ps1 = PatchSet.from_filename(utf8_file, newline='\n')
+        import io
+        with io.open(utf8_file, 'r', newline='\n') as diff_file:
+            ps2 = PatchSet(diff_file)
+
+        self.assertEqual(ps1, ps2)
+
+    def test_parse_diff_with_new_and_modified_binary_files(self):
+        """Parse git diff file with newly added and modified binaries files."""
+        utf8_file = os.path.join(self.samples_dir, 'samples/sample8.diff')
+        with open(utf8_file, 'r') as diff_file:
+            res = PatchSet(diff_file)
+
+        # three file in the patch
+        self.assertEqual(len(res), 5)
+
+        # first empty file is added
+        self.assertFalse(res[0].is_modified_file)
+        self.assertFalse(res[0].is_removed_file)
+        self.assertTrue(res[0].is_added_file)
+        self.assertFalse(res[0].is_binary_file)
+
+        # second file is added
+        self.assertFalse(res[1].is_modified_file)
+        self.assertFalse(res[1].is_removed_file)
+        self.assertTrue(res[1].is_added_file)
+        self.assertTrue(res[1].is_binary_file)
+
+        # third file is modified
+        self.assertTrue(res[2].is_modified_file)
+        self.assertFalse(res[2].is_removed_file)
+        self.assertFalse(res[2].is_added_file)
+        self.assertTrue(res[2].is_binary_file)
+
+        # fourth file is removed
+        self.assertFalse(res[3].is_modified_file)
+        self.assertTrue(res[3].is_removed_file)
+        self.assertFalse(res[3].is_added_file)
+        self.assertTrue(res[3].is_binary_file)
+
+        # fifth empty file is added
+        self.assertFalse(res[4].is_modified_file)
+        self.assertFalse(res[4].is_removed_file)
+        self.assertTrue(res[4].is_added_file)
+        self.assertFalse(res[4].is_binary_file)
+
+    def test_parse_round_trip_with_binary_files_in_diff(self):
+        """Parse git diff with binary files though round trip"""
+        utf8_file = os.path.join(self.samples_dir, 'samples/sample8.diff')
+        with open(utf8_file, 'r') as diff_file:
+            res1 = PatchSet(diff_file)
+
+        res2 = PatchSet(str(res1))
+        self.assertEqual(res1, res2)
+
+    def test_parse_diff_git_no_prefix(self):
+        utf8_file = os.path.join(self.samples_dir, 'samples/git_no_prefix.diff')
+        with open(utf8_file, 'r') as diff_file:
+            res = PatchSet(diff_file)
+
+        self.assertEqual(len(res), 3)
+
+        self.assertEqual(res[0].source_file, 'file1')
+        self.assertEqual(res[0].target_file, '/dev/null')
+        self.assertTrue(res[0].is_removed_file)
+        self.assertEqual(res[0].path, 'file1')
+
+        self.assertEqual(res[1].source_file, 'file2')
+        self.assertEqual(res[1].target_file, 'file2')
+        self.assertTrue(res[1].is_modified_file)
+        self.assertEqual(res[1].path, 'file2')
+
+        self.assertEqual(res[2].source_file, '/dev/null')
+        self.assertEqual(res[2].target_file, 'file3')
+        self.assertTrue(res[2].is_added_file)
+        self.assertEqual(res[2].path, 'file3')
+
+    def test_parse_filename_with_spaces(self):
+        filename = os.path.join(self.samples_dir, 'samples/git_filenames_with_spaces.diff')
+        with open(filename) as f:
+            res = PatchSet(f)
+
+        self.assertEqual(len(res), 1)
+
+        self.assertEqual(res[0].source_file, '/dev/null')
+        self.assertEqual(res[0].target_file, 'b/has spaces/t.sql')
+        self.assertTrue(res[0].is_added_file)
+        self.assertEqual(res[0].path, 'has spaces/t.sql')
+
+    def test_parse_filename_prefix_with_spaces(self):
+        filename = os.path.join(self.samples_dir, 'samples/git_filenames_with_spaces_prefix.diff')
+        with open(filename) as f:
+            res = PatchSet(f)
+
+        self.assertEqual(len(res), 1)
+
+        self.assertEqual(res[0].source_file, '/dev/null')
+        self.assertEqual(res[0].target_file, 'dst://foo bar/baz')
+        self.assertTrue(res[0].is_added_file)
+        self.assertEqual(res[0].path, 'dst://foo bar/baz')
+
+    def test_deleted_file(self):
+        filename = os.path.join(self.samples_dir, 'samples/git_delete.diff')
+        with open(filename) as f:
+            res = PatchSet(f)
+
+        self.assertEqual(len(res), 1)
+        self.assertEqual(res[0].source_file, 'a/somefile.c')
+        self.assertEqual(res[0].target_file, '/dev/null')
+        self.assertTrue(res[0].is_removed_file)
+
     def test_diff_lines_linenos(self):
         with open(self.sample_file, 'rb') as diff_file:
             res = PatchSet(diff_file, encoding='utf-8')
@@ -277,6 +402,48 @@ class TestUnidiffParser(unittest.TestCase):
         self.assertEqual(source_line_nos, expected_source_line_nos)
         self.assertEqual(diff_line_nos, expected_diff_line_nos)
 
+    def test_diff_hunk_positions(self):
+        with open(self.sample_file, 'rb') as diff_file:
+            res = PatchSet(diff_file, encoding='utf-8')
+        self.do_test_diff_hunk_positions(res)
+
+    def test_diff_metadata_only(self):
+        with open(self.sample_file, 'rb') as diff_file:
+            res = PatchSet(diff_file, encoding='utf-8', metadata_only=True)
+        self.do_test_diff_hunk_positions(res)
+
+    def do_test_diff_hunk_positions(self, res):
+        hunk_positions = []
+        for diff_file in res:
+            for hunk in diff_file:
+                hunk_positions.append((hunk.source_start, hunk.target_start,
+                                       hunk.source_length, hunk.target_length))
+
+        expected_hunk_positions = [
+            # File: 1, Hunk: 1
+            (1, 1, 3, 9),
+            # File: 1, Hunk: 2
+            (5, 11, 16, 10),
+            # File: 1, Hunk: 3
+            (22, 22, 3, 7),
+            # File: 2, Hunk: 1
+            (0, 1, 0, 9),
+            # File: 3, Hunk: 1
+            (1, 0, 9, 0)
+        ]
+
+        self.assertEqual(hunk_positions, expected_hunk_positions)
+
+    def test_binary_patch(self):
+        utf8_file = os.path.join(self.samples_dir, 'samples/binary.diff')
+        with open(utf8_file, 'r') as diff_file:
+            res = PatchSet(diff_file)
+            self.assertEqual(len(res), 1)
+            patch = res[0]
+            self.assertEqual(patch.source_file, '/dev/null')
+            self.assertEqual(patch.target_file, 'b/1x1.png')
+            self.assertTrue(patch.is_binary_file)
+            self.assertTrue(patch.is_added_file)
 
 class TestVCSSamples(unittest.TestCase):
     """Tests for real examples from VCS."""
@@ -327,3 +494,35 @@ class TestVCSSamples(unittest.TestCase):
             # by unidiff are the same
             with codecs.open(file_path, 'r', encoding='utf-8') as diff_file:
                 self.assertEqual(diff_file.read(), str(res))
+
+    def test_git_renaming(self):
+        tests_dir = os.path.dirname(os.path.realpath(__file__))
+        file_path = os.path.join(tests_dir, 'samples/git_rename.diff')
+        with codecs.open(file_path, 'r', encoding='utf-8') as diff_file:
+            res = PatchSet(diff_file)
+
+        self.assertEqual(len(res), 3)
+        self.assertEqual(len(res.modified_files), 3)
+        self.assertEqual(len(res.added_files), 0)
+        self.assertEqual(len(res.removed_files), 0)
+
+        # renamed and modified files
+        for patch in res[:2]:
+            self.assertTrue(patch.is_rename)
+            self.assertEqual(patch.added, 1)
+            self.assertEqual(patch.removed, 1)
+        # renamed file under sub-path
+        patch = res[2]
+        self.assertTrue(patch.is_rename)
+        self.assertEqual(patch.added, 0)
+        self.assertEqual(patch.removed, 0)
+        # confirm the full path is in source/target filenames
+        self.assertEqual(patch.source_file, 'a/sub/onefile')
+        self.assertEqual(patch.target_file, 'b/sub/otherfile')
+        # check path is the target path
+        self.assertEqual(patch.path, 'sub/otherfile')
+
+        # check that original diffs and those produced
+        # by unidiff are the same
+        with codecs.open(file_path, 'r', encoding='utf-8') as diff_file:
+            self.assertEqual(diff_file.read(), str(res))

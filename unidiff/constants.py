@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 # The MIT License (MIT)
-# Copyright (c) 2014-2017 Matias Bordese
+# Copyright (c) 2014-2022 Matias Bordese
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -34,6 +34,22 @@ RE_SOURCE_FILENAME = re.compile(
 RE_TARGET_FILENAME = re.compile(
     r'^\+\+\+ (?P<filename>[^\t\n]+)(?:\t(?P<timestamp>[^\n]+))?')
 
+
+# check diff git line for git renamed files support
+RE_DIFF_GIT_HEADER = re.compile(
+    r'^diff --git (?P<source>a/[^\t\n]+) (?P<target>b/[^\t\n]+)')
+RE_DIFF_GIT_HEADER_URI_LIKE = re.compile(
+    r'^diff --git (?P<source>.*://[^\t\n]+) (?P<target>.*://[^\t\n]+)')
+RE_DIFF_GIT_HEADER_NO_PREFIX = re.compile(
+    r'^diff --git (?P<source>[^\t\n]+) (?P<target>[^\t\n]+)')
+
+# check diff git new file marker `deleted file mode 100644`
+RE_DIFF_GIT_DELETED_FILE = re.compile(r'^deleted file mode \d+$')
+
+# check diff git new file marker `new file mode 100644`
+RE_DIFF_GIT_NEW_FILE = re.compile(r'^new file mode \d+$')
+
+
 # @@ (source offset, length) (target offset, length) @@ (section header)
 RE_HUNK_HEADER = re.compile(
     r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))?\ @@[ ]?(.*)")
@@ -50,8 +66,14 @@ RE_HUNK_EMPTY_BODY_LINE = re.compile(
 
 RE_NO_NEWLINE_MARKER = re.compile(r'^\\ No newline at end of file')
 
+RE_BINARY_DIFF = re.compile(
+    r'^Binary files? '
+    r'(?P<source_filename>[^\t]+?)(?:\t(?P<source_timestamp>[\s0-9:\+-]+))?'
+    r'(?: and (?P<target_filename>[^\t]+?)(?:\t(?P<target_timestamp>[\s0-9:\+-]+))?)? (differ|has changed)')
+
 DEFAULT_ENCODING = 'UTF-8'
 
+DEV_NULL = '/dev/null'
 LINE_TYPE_ADDED = '+'
 LINE_TYPE_REMOVED = '-'
 LINE_TYPE_CONTEXT = ' '

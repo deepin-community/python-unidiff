@@ -45,7 +45,7 @@ if __name__ == '__main__':
     if PY2:
         diff_file = codecs.getreader(encoding)(diff_file)
 
-    patch = PatchSet(diff_file)
+    patch = PatchSet(diff_file, metadata_only=(not args.show_diff))
 
     if args.show_diff:
         print(patch)
@@ -55,14 +55,21 @@ if __name__ == '__main__':
     print('-------')
     additions = 0
     deletions = 0
+    renamed_files = 0
     for f in patch:
-        additions += f.added
-        deletions += f.removed
-        print('%s:' % f.path, '+%d additions,' % f.added,
-              '-%d deletions' % f.removed)
+        if f.is_binary_file:
+            print('%s:' % f.path, '(binary file)')
+        else:
+            additions += f.added
+            deletions += f.removed
+            print('%s:' % f.path, '+%d additions,' % f.added,
+                  '-%d deletions' % f.removed)
+        renamed_files = renamed_files + 1 if f.is_rename else renamed_files
 
     print()
     print('%d modified file(s), %d added file(s), %d removed file(s)' % (
         len(patch.modified_files), len(patch.added_files),
         len(patch.removed_files)))
+    if renamed_files:
+        print('%d file(s) renamed' % renamed_files)
     print('Total: %d addition(s), %d deletion(s)' % (additions, deletions))
